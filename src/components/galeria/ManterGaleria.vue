@@ -1,10 +1,11 @@
 <template>
   <div>
     <h1>Cadastro de Vídeo Galeria</h1>
-    <div id='msg'></div>
+    <div id='msg' v-html="mensagem"></div>
 
-    <div id='listagem' class="format">
-      <button id='btn-exibir-formulario' type="button" class="btn btn-primary">
+    <div id='listagem' class='format'  v-show="exibirListagemForm">
+      <button id='btn-exibir-formulario' type="button" class="btn btn-primary"
+      v-on:click="prepararFormCadastro()">
         Cadastrar
       </button>
       <br>
@@ -21,10 +22,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Código</td>
-                <td>Título</td>
-                <td>Video</td>
+              <tr v-for="item in listagem">
+                <td>{{item.id_galeria_video}}</td>
+                <td>{{item.titulo}}</td>
+                <td><video v-bind:src="item.caminho" width="320" height="240" controls></video></td>
                 <td>Editar</td>
                 <td>Deletar</td>
               </tr>
@@ -34,7 +35,7 @@
       </div>
     </div>
 
-    <div id='formulario'>
+    <div id='formulario'  v-show="!exibirListagemForm">
       <div class="row">
         <div class="col-sm">
           <form method="POST" action="/" id="galeriaForm">
@@ -52,11 +53,13 @@
 
             <div class="form-group">
               <label for="v-video">Vídeo</label>
-              <input type="file" class="form-control-file" id="arquivo" name="arquivo"/>
+              <input type="file" class="form-control-file" id="arquivo" 
+              ref="arquivo" v-on:change="carregarVideo($event)"
+              name="arquivo"/>
             </div>
 
             <div class="form-group">
-              <video src="/" width="320" height="240" controls></video>
+              <video v-bind:src="urlVideo" width="320" height="260" controls></video>
             </div>
 
             <div class="form-inline">
@@ -67,7 +70,6 @@
                 Cancelar
               </button>
             </div>
-            
           </form>
         </div>
       </div>
@@ -79,6 +81,74 @@
 export default {
   name: 'ManterGaleria',
   props: {  
+  },
+  data(){
+    return{
+      exibirListagemForm: true,
+      listagem: null,
+      mensagem : "",
+      urlVideo: "",
+      arquivoVideo: ""
+    }
+  },
+
+  methods: {
+    listarDados(){
+      this.$galeriaService.getTodos().then(response => {
+        if(response.erro){
+         console.log("Deu erro");
+        }else{
+          this.listagem = response.dados.map(function(objeto){
+            return {
+              id_galeria_video: objeto.id_galeria_video,
+              titulo: objeto.titulo,
+              caminho: this + (objeto.caminho ? objeto.caminho.substring(1) : objeto.caminho) 
+              
+            }
+            console.log(caminho);
+          }, this.$server);
+        }
+      }).catch(response => {
+        console.log("TEste - Deu erro");
+      });
+    },
+    exibirMsgAlert(msg, tipo){
+      let dados = "";
+
+      if(msg == "sucesso"){
+        dados = `<div class= 'alert alert-success' role='alert'>
+          <strong>${msg}</strong>
+        </div>`;
+      } else if( tipo == "erro"){
+        dados = `<div class= 'alert alert-danger' role='alert'>
+          <strong>${msg}</strong>
+        </div>`;
+      }
+      this.mensagem = dados;
+    },
+    limparMsgAlert(){
+      this.mensagem = "";
+    },
+    prepararFormCadastro(){
+      this.limparMsgAlert();
+      this.exibirListagemForm = false;
+    },
+    carregarVideo(event){
+      //if(event.target.files.length > 0){}
+      if(this.$refs.arquivo.files.length > 0){
+        const leitor = new FileReader();
+        const arquivo = this.$refs.arquivo.files[0];
+        leitor.readAsDataURL(arquivo);
+        leitor.onload = () => {
+          const dataUrl = leitor.result;
+          this.urlVideo = dataUrl;
+          this.arquivoVideo = arquivo;
+        }
+      }
+    }
+  },
+  mounted(){
+    this.listarDados();
   }
 }
 </script>

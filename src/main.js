@@ -8,9 +8,9 @@ import ManterGaleria from './components/galeria/ManterGaleria.vue'
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 
 import GaleriaService from './service/GaleriaService'
-import ConfigClass from './classes/ConfigClass'
+import {ConfigClass} from './classes/ConfigClass'
 
-let server = '${ConfigClass.getUrlApi().toString()}';
+let server = `${ConfigClass.getUrlApi().toString()}`;
 
 Vue.prototype.$galeriaService = GaleriaService;
 Vue.prototype.$server = server;
